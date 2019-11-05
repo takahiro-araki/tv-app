@@ -46,6 +46,34 @@ public class ExecuteSearch {
 	
 	
 	public static String searchTrain(InputForm form) {
+		StringBuilder str=new StringBuilder();
+		//ジョルダンのリンク長すぎ問題
+		str.append("https://www.jorudan.co.jp/norikae/cgi/nori.cgi?eki1=");
+		str.append(form.getJobStation());
+		str.append("&eki2=");
+		str.append(form.getNearestStation());
+		//テレビの放送年月をアペンドする
+		str.append("&Dym=");
+		str.append("");
+		//テレビの放送日をアペンドする
+		str.append("&Ddd=");
+		str.append("");
+		//テレビの放送時間（時）をアペンドする
+		str.append("&Dhh=");
+		str.append("");
+		//テレビの放送時間（分）をアペンドする
+		str.append("&Dmn1=");
+		str.append("");
+		//到着にセットして検索
+		str.append("&Cway=1&S=検索");
+		
+		
+		
+		
+		
+
+		
+		
 		return "outputForm";
 		
 	}
