@@ -1,5 +1,6 @@
 package com.example;
 
+
 /**
  * インプット画面からの情報を取得するフォーム.
  * @author takahiro.araki
@@ -13,6 +14,10 @@ public class InputForm {
 	private String jobStation;
 	/**テレビタイトル */
 	private String tvTitle;
+	/**テレビ開始時間 */
+	private String tvStartTime;
+	
+	
 	public String getNearestStation() {
 		return nearestStation;
 	}
@@ -31,11 +36,21 @@ public class InputForm {
 	public void setTvTitle(String tvTitle) {
 		this.tvTitle = tvTitle;
 	}
+	public String getTvStartTime() {
+		return tvStartTime;
+	}
+	public void setTvStartTime(String tvStartTime) {
+		this.tvStartTime = tvStartTime;
+	}
 	@Override
 	public String toString() {
 		return "InputForm [nearestStation=" + nearestStation + ", jobStation=" + jobStation + ", tvTitle=" + tvTitle
-				+ "]";
+				+ ", tvStartTime=" + tvStartTime + "]";
 	}
+	
+	
+	
+	
 	
 	
 
