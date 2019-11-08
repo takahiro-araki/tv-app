@@ -2,12 +2,18 @@ package com.example;
 
 import java.io.IOException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
-import org.jsoup.select.Elements;
 import org.jsoup.nodes.Element;
+import org.jsoup.select.Elements;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.RequestMapping;
+
 
 /**
  * HTML情報を取得するクラス.
@@ -15,42 +21,15 @@ import org.jsoup.nodes.Element;
  * @author takahiro.araki
  *
  */
+@Controller
+@RequestMapping("/search")
 public class ExecuteSearch {
-	public static void main(String[] args) {
-		try{
-			StringBuilder str = new StringBuilder();
-			// ジョルダンのリンク長すぎ問題
-			str.append("https://www.jorudan.co.jp/norikae/cgi/nori.cgi?eki1=");
-			str.append("保谷");
-			str.append("&eki2=");
-			str.append("新宿");
-			// テレビの放送年月をアペンドする
-			str.append("&Dym=");
-			str.append("201911");
-			// テレビの放送日をアペンドする
-			str.append("&Ddd=");
-			str.append("6");
-			// テレビの放送時間（時）をアペンドする
-			str.append("&Dhh=");
-			str.append("20");
-			// テレビの放送時間（分）をアペンドする
-			str.append("&Dmn1=");
-			str.append("15");
-			// 到着にセットして検索
-			str.append("&Cway=1&S=検索");
-			
-			
-			Document document=Jsoup.connect(str.toString()).get();
-		Elements elements=document.select("#Bk_list_tbody tr td");
-		for (Element element:elements) {
-			System.out.println("検証　"+element);
-			
-			
-		}
+
+	
+	@RequestMapping("")
+	public String showInputForm() {
+		return "inputForm";
 		
-		
-		}catch(Exception e) {
-			e.printStackTrace();}
 	}
 		
 		
@@ -60,7 +39,8 @@ public class ExecuteSearch {
 	 * 
 	 * @return テレビ番組の開始時間の文字列情報
 	 */
-	public static String getHtml(InputForm form) {
+	@RequestMapping("/html")
+	public static String getHtml(InputForm form,Model model) {
 
 		try {
 			// テレビ番組の情報を取得するためのget文を作成
@@ -70,35 +50,36 @@ public class ExecuteSearch {
 			// ドキュメントクラスの変数を作成し、HTMLを取得
 			Document document = Jsoup.connect(str.toString()).get();
 			// 指定のタグ要素の情報を検索する
-			Elements elements = document.select(".leftarea p em");
+			Elements timeElements = document.select(".leftarea p em");
+			Elements titleElements = document.select(".yjLS.pb5p a");
 			// 検索結果の先頭が見たい番組という前提（本来ならば、検証しないといけない）
-			String startTime = elements.get(1).toString().substring(0, elements.get(1).toString().indexOf("～"));
+			String startTime = timeElements.get(1).ownText().toString().substring(0, timeElements.get(1).ownText().toString().indexOf("～"));
+			String tvTitle=titleElements.get(0).ownText().toString();
 			form.setTvStartTime(startTime);
-			
-
+			form.setTvTitle(tvTitle);
 		}
-
 		catch (IOException e) {
 			e.printStackTrace();
 		}
-		return searchTrain(form);
+		return searchTrain(form,model);
 	}
-
 	/**
 	 * @param form
 	 * @return
 	 */
-	public static String searchTrain(InputForm form) {
+	public static String searchTrain(InputForm form,Model model) {
 		//時間を時分で分離
 		String hour=form.getTvStartTime().substring(0,form.getTvStartTime().indexOf(":"));
-		String minuts=form.getTvStartTime().substring(form.getTvStartTime().indexOf(":"),form.getTvStartTime().length());
+
+		String minuts1=form.getTvStartTime().substring(form.getTvStartTime().indexOf(":")+1,form.getTvStartTime().length()-1);
+		String minuts2=form.getTvStartTime().substring((form.getTvStartTime().indexOf(":")+2),form.getTvStartTime().length());
+
 		//現在の日付を取得
 		Date date =new Date();
-		SimpleDateFormat yearDateFormat=new SimpleDateFormat("yyyymm");
+		SimpleDateFormat yearDateFormat=new SimpleDateFormat("yyyyMM");
 		SimpleDateFormat mounthDateFormat=new SimpleDateFormat("dd");
 		String year=yearDateFormat.format(date);
 		String mounth=mounthDateFormat.format(date);
-		
 		StringBuilder str = new StringBuilder();
 		// ジョルダンのリンク長すぎ問題
 		str.append("https://www.jorudan.co.jp/norikae/cgi/nori.cgi?eki1=");
@@ -116,20 +97,31 @@ public class ExecuteSearch {
 		str.append(hour);
 		// テレビの放送時間（分）をアペンドする
 		str.append("&Dmn1=");
-		str.append(minuts);
+		str.append(minuts1);
+		str.append("&Dmn2=");
+		str.append(minuts2);
 		// 到着にセットして検索
 		str.append("&Cway=1&S=検索");
+		
 		// ドキュメントクラスの変数を作成し、HTMLを取得
+		OutputDomain outputDomain=null;
+		List<OutputDomain> outputDomainList=new ArrayList<>();
 		try {
 			Document document = Jsoup.connect(str.toString()).get();
-			Elements elements=document.select("tr td");
-			
+			Elements rootElements=document.select(".bk_result h3");
+			Elements urlElements=document.select(".bk_result .print");
+			for(int i=0;i<rootElements.size();i++) {
+				outputDomain=new OutputDomain();
+				outputDomain.setRoot(rootElements.get(i).ownText().toString());
+				outputDomain.setUrl(urlElements.get(i).absUrl("href").toString());
+				outputDomainList.add(outputDomain);
+			}
+			model.addAttribute("outputDomainList",outputDomainList);
+			model.addAttribute("title",form.getTvTitle());
+			model.addAttribute("time",form.getTvStartTime());
 		} catch (IOException e) {
 			e.printStackTrace();
-
 		}
 		return "outputForm";
-
 	}
-
 }

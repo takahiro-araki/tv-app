@@ -5,6 +5,13 @@
 <title>Insert title here</title>
 </head>
 <body>
+『<strong><span th:text="${title}"></span></strong>(<span th:text="${time}"></span>～)』 を見たいなら・・
+	<table>
+		<!-- ループさせる -->
+		<tr th:each="outputDomain:${outputDomainList}">
+			<td><a th:href="${outputDomain.url}"><span th:text="${outputDomain.root}"></span></a>　で帰れ！！！</td>
+		</tr>
+	</table>
 
 </body>
 </html>
